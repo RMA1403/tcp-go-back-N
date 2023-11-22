@@ -1,5 +1,5 @@
-from Segment import Segment
-from SegmentFlag import SegmentFlag
+from ..classes.Segment import Segment
+from ..classes.SegmentFlag import SegmentFlag
 
 flag = SegmentFlag(True, False, True)
 segment = Segment(flag, 10, 1, 0b0, bytes())

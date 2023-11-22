@@ -4,12 +4,13 @@ SYN = 0b00010
 ACK = 0b10000
 FIN = 0b00001
 
+
 class SegmentFlag:
     def __init__(self, syn: bool, ack: bool, fin: bool):
         self.syn = syn
         self.ack = ack
-        self.fin = fin  
-    
+        self.fin = fin
+
     def to_bytes(self) -> bytes:
         bytes = 0b0
         if self.syn:
