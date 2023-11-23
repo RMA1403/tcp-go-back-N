@@ -1,6 +1,6 @@
 import struct
 
-from .SegmentFlag import SegmentFlag
+from SegmentFlag import SegmentFlag
 
 
 class Segment:
@@ -21,6 +21,12 @@ class Segment:
     def __str__(self):
         return f"Segment(flags={self.flags}, seq_num={self.seq_num}, ack_num={self.ack_num}, checksum={self.checksum}, payload={self.payload})"
 
+    def log(self, message):
+        print(f"[!] [Segment {self.seq_num}] {message}")
+
+    def log_handshake(self, client):
+        print(f"[!] [Handshake] Handshake to {client}...")
+    
     @staticmethod
     def syn(seq_num: int):
         pass
@@ -61,7 +67,6 @@ class Segment:
         # do one's complement
         checksum = ~checksum
 
-        #  return nya gmn ??
         return checksum & 0xFFFF
 
     def update_checksum(self):
