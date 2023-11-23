@@ -1,13 +1,16 @@
 from abc import ABC, abstractmethod
 
-from .Connection import Connection
-from .Segment import Segment
+from Connection import Connection
+from Segment import Segment
 
 
 class Node(ABC):
-    def __init__(self, connection: Connection) -> None:
-        self.connection = connection
+    def __init__(self, ip: str, port: int) -> None:
+        self.connection = Connection(ip, port) 
 
+    def log(self, message: str):
+        print(f"[{self.__class__.__name__}] {message}")
+    
     @abstractmethod
     def run() -> None:
         pass
