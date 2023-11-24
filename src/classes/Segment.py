@@ -1,6 +1,6 @@
 import struct
 
-from SegmentFlag import SegmentFlag
+from .SegmentFlag import SegmentFlag
 
 
 class Segment:
@@ -49,7 +49,8 @@ class Segment:
 
     def calculate_checksum(self):
         # using 16 bit one's complement
-        data = self.to_bytes()
+        # data = self.to_bytes()
+        data = self.payload
         # check the length of data is even
         if len(data) % 2 != 0:
             # add padding if not even
