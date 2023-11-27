@@ -5,7 +5,7 @@ from .Connection import Connection
 from .Segment import Segment
 from .SegmentFlag import SegmentFlag
 from ..interfaces.Parseable import Parseable
-from .PQueue import PriorityQueue
+from .DynamicArray import DynamicArray
 
 class Client(Node, Parseable):
 
@@ -75,29 +75,30 @@ class Client(Node, Parseable):
         return data_segment
     
     def receiveFile(self):
-        prioQ = PriorityQueue()
+        dynamic_array = DynamicArray()
         eof = False
         while (not eof):
             data_segment = self.receive()
-            
+            print(data_segment)
+
             if data_segment is not None:
                 
                 eof = data_segment.flags.fin
                 
                 if eof:
+                    data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, b"")
                     break
                 else:
-                    prioQ.insert(data_segment.payload)
-                    data_segment = Segment(data_segment.flags, 0, data_segment.seq_num + 1, 0, b"")
+                    dynamic_array.insert(data_segment.seq_num, data_segment.payload)
+                    data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, b"")
                     self.send(data_segment)
-        
+
         byte = b""
-        while not prioQ.isEmpty():
-            byte += prioQ.delete()
+        for i in range(dynamic_array.get_size()):
+            byte += dynamic_array.get_value(i)
         
-        result = byte.decode("utf-8")
-        print(result)
-            
+        with open(self.pathfile_output, 'wb') as file_receiver:
+            file_receiver.write(byte)
 
 if __name__ == "__main__":
     # Client Code

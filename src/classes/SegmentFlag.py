@@ -14,13 +14,16 @@ class SegmentFlag:
     def to_bytes(self) -> bytes:
         bytes = 0b0
         if self.syn:
-            bytes &= SYN
+            bytes |= SYN
         if self.ack:
-            bytes &= ACK
+            bytes |= ACK
         if self.fin:
-            bytes &= FIN
+            bytes |= FIN
 
         return struct.pack("B", bytes)
+
+    def __str__(self) -> str:
+        return f'(Syn={self.syn}, Ack={self.ack}, FIN={self.fin})'
 
     @staticmethod
     def from_bytes(bytes: bytes):

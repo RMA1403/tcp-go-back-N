@@ -75,11 +75,8 @@ class Server(Node, Parseable):
             
     def sendFile(self):
         # read file 
-        with open(self.pathfile_input, "r") as readfile:
-            filecontent = readfile.read()
-            
-            # convert to byte
-            data = bytes(filecontent, 'utf-8')
+        with open(self.pathfile_input, "rb") as readfile:
+            data = readfile.read()
             
             # chunk byte file
             self.chunkSize = 10
@@ -91,16 +88,16 @@ class Server(Node, Parseable):
             seq_num = 0
             while seq_num < len(payloads):
                 if seq_bottom <= seq_num <= seq_max:
-                    # data_segment = Segment(1, 1, payloads[seq_num])
                     if (seq_num == len(payloads) - 1):
                         data_segment = Segment(SegmentFlag(syn=False, ack=False, fin=True), seq_num, 0, 0, payloads[seq_num])
                     else:
                         data_segment = Segment(SegmentFlag(syn=False, ack=False, fin=False), seq_num, 0, 0, payloads[seq_num])
                     self.send(data_segment)
-                    
+                    print(data_segment)
+
                     received_segmet = self.receive()
                     if received_segmet is not None:
-                        seq_num = received_segmet.ack_num
+                        seq_num += 1
                         seq_bottom += 1
                         seq_max += 1
                     else:
@@ -114,4 +111,4 @@ if __name__ == "__main__":
     # server.receive()
     server.down()
 
-# python -m src.classes.Server 5001 src/classes/data.txt
+# python -m src.classes.Server 5001 src/classes/hello.txt
