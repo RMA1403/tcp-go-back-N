@@ -14,11 +14,11 @@ class SegmentFlag:
     def to_bytes(self) -> bytes:
         bytes = 0b0
         if self.syn:
-            bytes &= SYN
+            bytes |= SYN
         if self.ack:
-            bytes &= ACK
+            bytes |= ACK
         if self.fin:
-            bytes &= FIN
+            bytes |= FIN
 
         return struct.pack("B", bytes)
 
