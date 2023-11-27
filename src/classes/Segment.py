@@ -26,7 +26,7 @@ class Segment:
 
     def log_handshake(self, client):
         print(f"[!] [Handshake] Handshake to {client}...")
-    
+
     @staticmethod
     def syn(seq_num: int):
         pass
@@ -70,8 +70,77 @@ class Segment:
 
         return checksum & 0xFFFF
 
+    def encode_hamming_checksum(self):
+        hamming_position = [2**x for x in range(16)]
+
+        data = b""
+        data += struct.pack("II", self.seq_num, self.ack_num)
+        data += self.flags.to_bytes()
+        data += struct.pack("x")
+        data += self.payload
+
+        bin_data = 0
+        for num in list(data):
+            bin_data <<= 8
+            bin_data |= num
+
+        checksum = 0
+        for i in range(16):
+            temp = bin_data
+            count = 0
+            for j in range(1, len(bin(bin_data)[2:]) + 16):
+                if j in hamming_position:
+                    continue
+                
+                if j & (2**i) and temp & 0x1:
+                    count += 1
+
+                temp >>= 1
+
+            if count % 2 == 1:
+                checksum |= 2**i
+
+        return checksum
+
+    def detect_error(self):
+        return self.encode_hamming_checksum() != self.checksum
+
+    def correct_error(self):
+        error_position = self.encode_hamming_checksum() ^ self.checksum
+
+        hamming_position = [2**x for x in range(16)]
+
+        data = b""
+        data += struct.pack("II", self.seq_num, self.ack_num)
+        data += self.flags.to_bytes()
+        data += struct.pack("x")
+        data += self.payload
+
+        actual_position = 0
+        for i in range(error_position):
+            if i in hamming_position:
+                continue
+            actual_position += 1
+
+        new_data = b""
+        for i in range(len(data)):
+            if (len(data) - i - 1) == ((actual_position - 1) // 8):
+                bin_data = list(data[i : i + 1])[0]
+                corrected_data = bin_data ^ (2 ** ((actual_position - 1) % 8))
+                new_data += struct.pack("B", corrected_data)
+            else:
+                new_data += data[i : i + 1]
+
+        bin_data = 0
+        for num in list(new_data):
+            bin_data <<= 8
+            bin_data |= num
+
+        return new_data[:10] + struct.pack("H", self.checksum) + new_data[10:]
+
     def update_checksum(self):
-        self.checksum = self.calculate_checksum()
+        # self.checksum = self.calculate_checksum()
+        self.checksum = self.encode_hamming_checksum()
 
     def is_valid_checksum(self):
         return self.checksum == self.calculate_checksum()
