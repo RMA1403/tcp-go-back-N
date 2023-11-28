@@ -11,28 +11,31 @@ import threading
 class Server(Node, Parseable):
 
     def __init__(self):
-        _, self.broadcast_port, self.pathfile_input, self.is_broadcast = self.parse_args()
+        _, self.broadcast_port, self.pathfile_input = self.parse_args()
 
         self.ip = "127.0.0.1"
         super().__init__(self.ip, self.broadcast_port)
         # self.connection.node = self
         self.connection.set_passive_listen(True)
-        self.client_port = self.remote_hosts[0][1]
         self.chunkSize = 2**15 - 14
         self.windowSize = 3
+        self.payloads = None
+        self.setPayloads()
+        self.threads = []
+        self.seq_num = 0
 
     def parse_args(self) -> tuple[int, int, str]:
         parser = argparse.ArgumentParser(description='Server')
         parser.add_argument('broadcast_port', metavar='[broadcast port]', type=int, help='broadcast port used for all client')
         parser.add_argument('pathfile_input', metavar='[Path file input]', type=str, help='path to file you want to send')
-        parser.add_argument('is_broadcast', metavar='[is broadcast]', type=bool, help='broadcast or not')
+        # parser.add_argument('is_broadcast', metavar='[is broadcast]', type=bool, help='broadcast or not')
         
         args = parser.parse_args()
         broadcast_port = getattr(args, 'broadcast_port')
         pathfile_input = getattr(args, 'pathfile_input')
-        is_broadcast = getattr(args, 'is_broadcast')
+        # is_broadcast = getattr(args, 'is_broadcast')
         
-        return -1, broadcast_port, pathfile_input, is_broadcast
+        return -1, broadcast_port, pathfile_input
 
     def handleMessage(segment: Segment) -> None:
         print("Handling message:", segment.payload)
@@ -41,8 +44,8 @@ class Server(Node, Parseable):
         self.log("Connection closed")
         self.connection.close()
     
-    def send(self, data: Segment) -> None:
-        self.connection.send(self.ip, self.client_port, data)
+    def send(self, data: Segment, client_port) -> None:
+        self.connection.send(self.ip, client_port, data)
         data.log("Sent data segment")
     
     def receive(self):
@@ -56,23 +59,24 @@ class Server(Node, Parseable):
         # print(f"Received data: {data_segment.payload.decode()}")
         return data_segment
     
-    def fileSender(self):
+    def setPayloads(self):
         with open(self.pathfile_input, "rb") as readfile:
             data = readfile.read()
             
             # chunk byte file
-            payloads = [data[i:i + self.chunkSize] for i in range(0, len(data), self.chunkSize)]
-            
-            self.seq_bottom = 0
-            self.seq_max = self.windowSize
-            while self.seq_num < len(payloads):
-                if self.seq_bottom <= self.seq_num <= self.seq_max:
-                    if (self.seq_num == len(payloads) - 1):
-                        data_segment = Segment(SegmentFlag(syn=False, ack=False, fin=True), self.seq_num, 0, 0, 0, payloads[self.seq_num])
-                    else:
-                        data_segment = Segment(SegmentFlag(syn=False, ack=False, fin=False), self.seq_num, 0, 0, 0, payloads[self.seq_num])
-                    self.send(data_segment)
-                    self.seq_num += 1
+            self.payloads = [data[i:i + self.chunkSize] for i in range(0, len(data), self.chunkSize)]
+         
+    def fileSender(self, client_port):
+        self.seq_bottom = 0
+        self.seq_max = self.windowSize
+        while self.seq_num < len(self.payloads):
+            if self.seq_bottom <= self.seq_num <= self.seq_max:
+                if (self.seq_num == len(self.payloads) - 1):
+                    data_segment = Segment(SegmentFlag(syn=False, ack=False, fin=True), self.seq_num, 0, 0, 0, self.payloads[self.seq_num])
+                else:
+                    data_segment = Segment(SegmentFlag(syn=False, ack=False, fin=False), self.seq_num, 0, 0, 0, self.payloads[self.seq_num])
+                self.send(data_segment, client_port)
+                self.seq_num += 1
 
     def ackReceiver(self):
         fin = False
@@ -90,23 +94,30 @@ class Server(Node, Parseable):
             else:
                 self.seq_num = self.seq_bottom
 
-    def sendFile(self):
-        threads = []
-        self.seq_num = 0
-
-        threads.append(threading.Thread(target=self.fileSender, args=()))
-        threads.append(threading.Thread(target=self.ackReceiver, args=()))  
+    def sendFile(self, i):
+        self.threads.append(threading.Thread(target=self.fileSender, args=(self.remote_hosts[i][1],)))
+        self.threads.append(threading.Thread(target=self.ackReceiver, args=()))  
         
-        for thread in threads:
+        for thread in self.threads:
             thread.start()
 
-        for thread in threads:
+        for thread in self.threads:
             thread.join()
     
 if __name__ == "__main__":
     # Server Code
     server = Server()
-    server.sendFile()
+    finish = False
+    i = 0
+    max_i = len(server.remote_hosts)
+    while (not finish) :
+        server.sendFile(i)
+        i+=1
+        if i == max_i:
+            break 
+        cont = input("Apakah anda ingin melanjutkan pengiriman file ? (y/n): ")
+        if cont != "y":
+            break
     # server.receive()
     server.down()
 
