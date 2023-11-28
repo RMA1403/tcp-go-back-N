@@ -1,6 +1,6 @@
 def create_checksum(segment):
     # using 16 bit one's complement
-    data = segment.to_bytes()
+    data = segment.payload
     
     # check the length of data is even
     if len(data) % 2 != 0:

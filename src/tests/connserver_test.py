@@ -1,4 +1,4 @@
-from ..classes.Connection import Connection
+from ..connection.connection import Connection
 
 HOST = "127.0.0.1"
 PORT = 8765

@@ -14,13 +14,14 @@ with open("src/classes/data_long.txt", "r") as readfile:
     flag = SegmentFlag(True, False, True)
     segment = Segment(flag, 1, 1, 0, 0, data)
         
-    segment.update_checksum()
     segment.update_parity()
+    segment.update_checksum()
 
     byte_segment = segment.to_bytes()
     broken = byte_segment[:1247] + b"1"
 
     new_segment: Segment = Segment.from_bytes(broken)
     if not new_segment.is_valid_checksum():
+        print("masuk")
         new_segment.payload = correct_error(new_segment)
     print(new_segment.payload)

@@ -1,7 +1,7 @@
 import argparse
 
 from .Node import Node
-from .Connection import Connection
+from ..connection.connection import Connection
 from ..segment.segment import Segment
 from ..segment.flag import SegmentFlag
 from ..interfaces.Parseable import Parseable
@@ -15,6 +15,8 @@ class Client(Node, Parseable):
         self.ip = "127.0.0.1"
         super().__init__(self.ip, self.client_port)
         self.client_seq_num = 1  # Set an initial sequence number
+        
+        self.connection.connect(self.ip, self.broadcast_port)
 
     def parse_args(self) -> tuple[int, int, str]:
         parser = argparse.ArgumentParser(description='Client')
@@ -29,32 +31,8 @@ class Client(Node, Parseable):
 
         return client_port, broadcast_port, pathfile_output
 
-    def run(self) -> None:
-        self.three_way_handshake()
-
     def handleMessage(segment: Segment) -> None:
         print("Handling message:", segment.payload)
-    
-    def three_way_handshake(self):
-        self.log("Initiating three-way handshake...")
-        
-        # Step 1: Send SYN
-        syn_segment = Segment(SegmentFlag(syn=True, ack=False, fin=False), self.client_seq_num, 0, 0, b"")
-        self.connection.log_handshake(self.ip)
-        self.connection.send(self.ip, self.broadcast_port, syn_segment)
-
-        # Step 2: Receive SYN-ACK
-        syn_ack_data, _ = self.connection.listen(5)
-        self.syn_ack_segment = Segment.from_bytes(syn_ack_data)
-        self.syn_ack_segment.log("Received SYN-ACK")
-
-        # Step 3: Send ACK
-        self.client_seq_num += 1
-        ack_segment = Segment(SegmentFlag(syn=False, ack=True, fin=False), self.client_seq_num, self.syn_ack_segment.seq_num + 1, 0, b"")
-        self.connection.send(self.ip, self.broadcast_port, ack_segment)
-        ack_segment.log("Sent ACK")
-        
-        self.log("Three-way handshake finished")
     
     def down(self):
         self.log("Connection closed")
@@ -86,11 +64,11 @@ class Client(Node, Parseable):
                 eof = data_segment.flags.fin
                 
                 if eof:
-                    data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, b"")
+                    data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, 0, b"")
                     break
                 else:
                     dynamic_array.insert(data_segment.seq_num, data_segment.payload)
-                    data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, b"")
+                    data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, 0, b"")
                     self.send(data_segment)
 
         byte = b""
@@ -104,7 +82,7 @@ if __name__ == "__main__":
     # Client Code
     data = b"Hello World"
     client = Client()
-    client.run()
+    # client.run()
     client.receiveFile()
     # client.send(data)
     # client.receive()
