@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from .Connection import Connection
-from .Segment import Segment
+from ..segment.segment import Segment
 
 
 class Node(ABC):

@@ -1,6 +1,6 @@
 import socket
 
-from .Segment import Segment
+from ..segment.segment import Segment
 
 
 class Connection:

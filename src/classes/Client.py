@@ -2,8 +2,8 @@ import argparse
 
 from .Node import Node
 from .Connection import Connection
-from .Segment import Segment
-from .SegmentFlag import SegmentFlag
+from ..segment.segment import Segment
+from ..segment.flag import SegmentFlag
 from ..interfaces.Parseable import Parseable
 from .DynamicArray import DynamicArray
 

@@ -2,8 +2,8 @@ import binascii
 import argparse
 
 from .Node import Node
-from .Segment import Segment
-from .SegmentFlag import SegmentFlag
+from ..segment.segment import Segment
+from ..segment.flag import SegmentFlag
 from ..interfaces.Parseable import Parseable
 
 class Server(Node, Parseable):
