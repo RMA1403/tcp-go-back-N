@@ -25,5 +25,14 @@ class DynamicArray:
     def get_size(self):
         return len(self.array)
 
+    def delete_at(self, position):
+        if position < 0 or position >= len(self.array):
+            raise IndexError("Position out of bounds.")
+        
+        self.array[position] = None
+
+    def has_value(self):
+        return any(item is not None for item in self.array)
+
     def __str__(self) -> str:
         return str(self.array)
