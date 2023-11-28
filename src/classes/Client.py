@@ -79,19 +79,16 @@ class Client(Node, Parseable):
         eof = False
         while (not eof):
             data_segment = self.receive()
-            print(data_segment)
 
             if data_segment is not None:
                 
                 eof = data_segment.flags.fin
                 
+                dynamic_array.insert(data_segment.seq_num, data_segment.payload)
+                data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, b"")
+                self.send(data_segment)
                 if eof:
-                    data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, b"")
                     break
-                else:
-                    dynamic_array.insert(data_segment.seq_num, data_segment.payload)
-                    data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, b"")
-                    self.send(data_segment)
 
         byte = b""
         for i in range(dynamic_array.get_size()):
