@@ -100,15 +100,20 @@ class Server(Node, Parseable):
     def sendFile(self, i):
         self.threads = []
         self.seq_num = 0
+        # if i == 0:
+        #     self.connection.listen(None)
+        print(f"sending file ke-{i}")
         
         self.threads.append(threading.Thread(target=self.fileSender, args=(self.remote_hosts[i][1],)))
-        self.threads.append(threading.Thread(target=self.ackReceiver, args=()))  
+        self.threads.append(threading.Thread(target=self.ackReceiver, args=())) 
         
         for thread in self.threads:
-            thread.start()
+            if not thread.is_alive():
+                thread.start()
 
         for thread in self.threads:
-            thread.join()
+            if thread.is_alive():
+                thread.join()
     
 if __name__ == "__main__":
     server = Server()
@@ -117,8 +122,17 @@ if __name__ == "__main__":
     max_i = len(server.remote_hosts)
     prompt = input("Apakah ingin mengirim ke semua client sekaligus secara parallel? (y/n): ")
     if prompt == "y":
-        for i in range(max_i):
-            server.sendFile(i)
+        threads = []
+        server.seq_num = 0
+        for i in range(max_i):    
+            # threads.append(threading.Thread(target=server.fileSender, args=(server.remote_hosts[i][1],)))
+            threads.append(threading.Thread(target=server.sendFile, args=(i,)))
+        for thread in threads:
+            if not thread.is_alive():
+                thread.start()
+        for thread in threads:
+            if thread.is_alive():
+                thread.join()
     else:
         while not finished:
             start = input(f"Mulai mengirim untuk client ke-{i + 1}, port: {server.remote_hosts[i][1]} (y/n): ")
@@ -131,7 +145,9 @@ if __name__ == "__main__":
                 finished = cont.lower() != "y"
             
     # server.receive()
-    server.down()
+    prompt = input("Apakah anda ingin mematikan server?  (y/n): ")
+    if prompt.lower() ==  "y":
+        server.down()
     
 # python -m src.classes.Server 5001 data/data_long.txt 
 # python -m src.classes.Client 5000 5001 data/output/hello.txt
