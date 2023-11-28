@@ -17,7 +17,7 @@ class Server(Node, Parseable):
         super().__init__(self.ip, self.broadcast_port)
         self.server_seq_num = 1 
         self.client_port = None
-        self.chunkSize = 10
+        self.chunkSize = 2**15 - 14
         self.windowSize = 3
 
     def parse_args(self) -> tuple[int, int, str]:
@@ -74,7 +74,7 @@ class Server(Node, Parseable):
 
         data_segment = Segment.from_bytes(data_segment_data)
         data_segment.log("Received data segment")
-        print(f"Received data: {data_segment.payload.decode()}")
+        # print(f"Received data: {data_segment.payload.decode()}")
         return data_segment
     
     def fileSender(self):
@@ -86,7 +86,6 @@ class Server(Node, Parseable):
             
             self.seq_bottom = 0
             self.seq_max = self.windowSize
-            self.acknowledgeList = DynamicArray()
             while self.seq_num < len(payloads):
                 if self.seq_bottom <= self.seq_num <= self.seq_max:
                     if (self.seq_num == len(payloads) - 1):
@@ -94,7 +93,6 @@ class Server(Node, Parseable):
                     else:
                         data_segment = Segment(SegmentFlag(syn=False, ack=False, fin=False), self.seq_num, 0, 0, payloads[self.seq_num])
                     self.send(data_segment)
-                    self.acknowledgeList.insert(self.seq_num + 1, self.seq_num + 1)
                     self.seq_num += 1
 
     def ackReceiver(self):
@@ -104,16 +102,14 @@ class Server(Node, Parseable):
             received_segmet = self.receive()
 
             if received_segmet is not None:
-                self.acknowledgeList.delete_at(received_segmet.ack_num)
 
-                if not self.acknowledgeList.has_value():
+                if received_segmet.ack_num == self.seq_bottom + 1:
                     self.seq_bottom += 1
                     self.seq_max += 1
                 
                 fin = received_segmet.flags.fin
             else:
-                if self.acknowledgeList.has_value():
-                    self.seq_num = self.seq_bottom
+                self.seq_num = self.seq_bottom
 
     def sendFile(self):
         threads = []

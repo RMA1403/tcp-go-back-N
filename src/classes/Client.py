@@ -71,7 +71,7 @@ class Client(Node, Parseable):
             return None
         data_segment = Segment.from_bytes(data_segment_data)
         data_segment.log("Received data segment")
-        print(f"Received data: {data_segment.payload.decode()}")
+        # print(f"Received data: {data_segment.payload.decode()}")
         return data_segment
     
     def receiveFile(self):
