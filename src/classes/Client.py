@@ -84,7 +84,7 @@ if __name__ == "__main__":
     client.receiveFile()
     # client.send(data)
     # client.receive()
-    client.down()
+    # client.down()
 
 # python -m src.classes.Server 5001 data/data_long.txt 
 # python -m src.classes.Client 5000 5001 data/output/hello.txt

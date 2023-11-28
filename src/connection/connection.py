@@ -87,6 +87,7 @@ class Connection:
             return None, None
 
     def close(self):
+        print("hosea gay")
         self.sock.close()
 
     def initiate_close_connection(self, remote_ip: str, remote_port: str):
@@ -95,11 +96,13 @@ class Connection:
         self.send(remote_ip, remote_port, fin_segment)
 
         # wait for fin acknowledgement
-        fin_ack_segment = self.listen(5)
+        fin_ack_data, _ = self.listen(5)
+        fin_ack_segment = Segment.from_bytes(fin_ack_data)
 
         if fin_ack_segment is not None and fin_ack_segment.ack_num == fin_segment.seq_num + 1 and fin_ack_segment.flags.ack == True:
             # ack received, wait for fin
-            finwait_segment = self.listen(5)
+            finwait_data, _ = self.listen(5)
+            finwait_segment = Segment.from_bytes(finwait_data)
 
             if finwait_segment is not None and finwait_segment.ack_num == fin_ack_segment.ack_num + 1:
                 # fin received, send fin back
@@ -110,19 +113,23 @@ class Connection:
 
     def respond_close_connection(self):
         # listen for disconnect
-        fin_segment, (remote_ip, remote_port) = self.listen(None)
+        fin_data, (remote_ip, remote_port) = self.listen(None)
+        fin_segment = Segment.from_bytes(fin_data)
 
         if fin_segment is not None and fin_segment.flags.ack != True:
             # fin received, send acknowledgement
             fin_ack_segment = Segment(SegmentFlag(syn=True, ack=True, fin=True), fin_segment.seq_num, fin_segment.seq_num + 1, 0, 0, b"")
             self.send(remote_ip, remote_port, fin_ack_segment)
-
+            fin_ack_segment.log("Sent FIN-ACK")
+    
             # send fin to close
             finwait_segment = Segment(SegmentFlag(syn=True, ack=False, fin=True), fin_ack_segment.ack_num, fin_ack_segment.ack_num + 1, 0, 0, b"")
             self.send(remote_ip, remote_port, finwait_segment)
+            finwait_segment.log("Sent FIN-WAIT")
 
             # wait for finwait acknowledgement
-            finwait_ack_segment = self.listen(5)
+            finwait_ack_data, _ = self.listen(5)
+            finwait_ack_segment = Segment.from_bytes(finwait_ack_data)
 
-            if finwait_ack_segment is not None and finwait_ack_segment.ack_num == finwait_segment.ack_num + 1 and finwait_ack_segment.flags.ack == True:
-                self.close()
+            # if finwait_ack_segment is not None and finwait_ack_segment.ack_num == finwait_segment.ack_num + 1 and finwait_ack_segment.flags.ack == True:
+                # self.close()
