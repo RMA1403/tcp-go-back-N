@@ -16,13 +16,16 @@ class Server(Node, Parseable):
         self.ip = "127.0.0.1"
         super().__init__(self.ip, self.broadcast_port)
         # self.connection.node = self
-        self.connection.set_passive_listen(True)
+        finished = False
+        while  (not finished):
+            self.connection.set_passive_listen(True)
+            prompt = input("Apakah Anda ingin menambahkan client lain? (y/n): ")
+            finished = prompt != "y"
+        
         self.chunkSize = 2**15 - 14
         self.windowSize = 3
         self.payloads = None
         self.setPayloads()
-        self.threads = []
-        self.seq_num = 0
 
     def parse_args(self) -> tuple[int, int, str]:
         parser = argparse.ArgumentParser(description='Server')
@@ -95,6 +98,9 @@ class Server(Node, Parseable):
                 self.seq_num = self.seq_bottom
 
     def sendFile(self, i):
+        self.threads = []
+        self.seq_num = 0
+        
         self.threads.append(threading.Thread(target=self.fileSender, args=(self.remote_hosts[i][1],)))
         self.threads.append(threading.Thread(target=self.ackReceiver, args=()))  
         
@@ -107,17 +113,20 @@ class Server(Node, Parseable):
 if __name__ == "__main__":
     # Server Code
     server = Server()
-    finish = False
+    finished = False
     i = 0
     max_i = len(server.remote_hosts)
-    while (not finish) :
-        server.sendFile(i)
-        i+=1
-        if i == max_i:
-            break 
-        cont = input("Apakah anda ingin melanjutkan pengiriman file ? (y/n): ")
-        if cont != "y":
-            break
+    start = input("Mulai mengirim? (y/n): ")
+    if start == "y":
+        print("jumlah hosts: " + str(max_i))
+        while (not finished) :
+            server.sendFile(i)
+            i+=1
+            if i == max_i:
+                break 
+            cont = input("Apakah anda ingin melanjutkan pengiriman file ? (y/n): ")
+            finished = cont != "y"
+            
     # server.receive()
     server.down()
 
