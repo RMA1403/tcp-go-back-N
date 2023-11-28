@@ -83,9 +83,14 @@ class Server(Node, Parseable):
             ]
 
     def fileSender(self, client_port):
+        self.active = True
         self.seq_bottom = 0
         self.seq_max = self.windowSize
-        while self.seq_num < len(self.payloads):
+        # while self.seq_num < len(self.payloads):
+        while self.seq_bottom < len(self.payloads) and self.active:
+            if self.seq_num >= len(self.payloads):
+                continue
+            
             if self.seq_bottom <= self.seq_num <= self.seq_max:
                 if self.seq_num == len(self.payloads) - 1:
                     data_segment = Segment(
@@ -108,24 +113,27 @@ class Server(Node, Parseable):
                 self.send(data_segment, client_port)
                 # if self.seq_num < len(self.payloads) - 1:
                 self.seq_num += 1
-            print("SEND", self.seq_bottom, self.seq_num, self.seq_max)
+            print("SEND", self.seq_bottom, self.seq_num, self.seq_max, len(self.payloads))
+        
 
     def ackReceiver(self):
         fin = False
 
         while not fin:
+        # while self.seq_bottom < len(self.payloads):
             received_segmet = self.receive()
 
             if received_segmet is not None:
                 if received_segmet.ack_num == self.seq_bottom + 1:
                     self.seq_bottom += 1
                     self.seq_max += 1
-
+                print("FIN", received_segmet.flags.fin)
                 fin = received_segmet.flags.fin
             else:
                 self.seq_num = self.seq_bottom
             print("ACK", self.seq_bottom, self.seq_num, self.seq_max)
-        
+
+        self.active = False
 
     def sendFile(self, i):
         self.threads = []
@@ -147,7 +155,7 @@ class Server(Node, Parseable):
             if thread.is_alive():
                 thread.join()
 
-        server.connection.respond_close_connection()
+        # server.connection.respond_close_connection()
 
 if __name__ == "__main__":
     server = Server()
@@ -161,13 +169,11 @@ if __name__ == "__main__":
         threads = []
         server.seq_num = 0
         for i in range(max_i):
-            # threads.append(threading.Thread(target=server.fileSender, args=(server.remote_hosts[i][1],)))
             threads.append(threading.Thread(target=server.sendFile, args=(i,)))
         for thread in threads:
             if not thread.is_alive():
                 thread.start()
         for thread in threads:
-            # if thread.is_alive():
             thread.join()
     else:
         while not finished:
@@ -177,7 +183,6 @@ if __name__ == "__main__":
             if start.lower() == "y":
                 server.sendFile(i)
                 server.connection.respond_close_connection()
-
                 i += 1
                 if i == max_i:
                     break
@@ -185,10 +190,6 @@ if __name__ == "__main__":
                     f"Lanjutkan pengiriman file untuk client ke-{i + 1}, port: {server.remote_hosts[i][1]} (y/n): "
                 )
                 finished = cont.lower() != "y"
-
-        # for host in server.remote_hosts:
-        #     print("KONTOL")
-        # server.connection.respond_close_connection()
 
     server.connection.close()
     prompt = input("Apakah anda ingin mematikan server?  (y/n): ")

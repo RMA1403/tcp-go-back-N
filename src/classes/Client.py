@@ -63,12 +63,15 @@ class Client(Node, Parseable):
                 
                 dynamic_array.insert(data_segment.seq_num, data_segment.payload)
                 data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, 0, b"")
-                self.send(data_segment)
                 # print(dynamic_array)
                 if eof and dynamic_array.check_full():
                     break
                 elif eof:
                     eof = False
+                else:
+                    self.send(data_segment)
+        data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, 0, b"")
+        self.send(data_segment)
 
         byte = b""
         for i in range(dynamic_array.get_size()):

@@ -87,27 +87,28 @@ class Connection:
             return None, None
 
     def close(self):
-        print("hosea gay")
         self.sock.close()
 
     def initiate_close_connection(self, remote_ip: str, remote_port: str):
         # send fin segement
         fin_segment = Segment(SegmentFlag(syn=True, ack=False, fin=True), 0, 0, 0, 0, b"")
         self.send(remote_ip, remote_port, fin_segment)
+        fin_segment.log("Sent FIN")
 
         # wait for fin acknowledgement
         fin_ack_data, _ = self.listen(5)
         fin_ack_segment = Segment.from_bytes(fin_ack_data)
-
-        if fin_ack_segment is not None and fin_ack_segment.ack_num == fin_segment.seq_num + 1 and fin_ack_segment.flags.ack == True:
+        print(fin_ack_segment.ack_num, fin_segment.seq_num + 1)
+        if fin_ack_segment is not None and fin_ack_segment.flags.ack == True:
             # ack received, wait for fin
             finwait_data, _ = self.listen(5)
             finwait_segment = Segment.from_bytes(finwait_data)
 
-            if finwait_segment is not None and finwait_segment.ack_num == fin_ack_segment.ack_num + 1:
+            if finwait_segment is not None:
                 # fin received, send fin back
-                finwait_ack_segment = Segment(SegmentFlag(syn=True, ack=True, fin=True), finwait_segment.ack_num, finwait_segment.ack_num + 1, 0, 0, b"")
+                finwait_ack_segment = Segment(SegmentFlag(syn=True, ack=True, fin=True), 2, 3, 0, 0, b"")
                 self.send(remote_ip, remote_port, finwait_ack_segment)
+                finwait_ack_segment.log("Sent FIN-WAIT-ACK")
 
                 self.close()
 
@@ -118,18 +119,19 @@ class Connection:
 
         if fin_segment is not None and fin_segment.flags.ack != True:
             # fin received, send acknowledgement
-            fin_ack_segment = Segment(SegmentFlag(syn=True, ack=True, fin=True), fin_segment.seq_num, fin_segment.seq_num + 1, 0, 0, b"")
+            fin_ack_segment = Segment(SegmentFlag(syn=True, ack=True, fin=True), 0, 1, 0, 0, b"")
+            print(fin_segment.seq_num)
             self.send(remote_ip, remote_port, fin_ack_segment)
             fin_ack_segment.log("Sent FIN-ACK")
     
             # send fin to close
-            finwait_segment = Segment(SegmentFlag(syn=True, ack=False, fin=True), fin_ack_segment.ack_num, fin_ack_segment.ack_num + 1, 0, 0, b"")
+            finwait_segment = Segment(SegmentFlag(syn=True, ack=False, fin=True), 1, 2, 0, 0, b"")
             self.send(remote_ip, remote_port, finwait_segment)
             finwait_segment.log("Sent FIN-WAIT")
 
             # wait for finwait acknowledgement
             finwait_ack_data, _ = self.listen(5)
-            finwait_ack_segment = Segment.from_bytes(finwait_ack_data)
+            # finwait_ack_segment = Segment.from_bytes(finwait_ack_data)
 
             # if finwait_ack_segment is not None and finwait_ack_segment.ack_num == finwait_segment.ack_num + 1 and finwait_ack_segment.flags.ack == True:
                 # self.close()
