@@ -10,20 +10,29 @@
 * [Authors](#authors)
 
 ## General Information
+Kami diminta untuk membuat sistem program yang terdiri dari server dan client yang berkomunikasi lewat jaringan. Program dibuat menggunakan bahasa Python 3, dan Kami tidak boleh menggunakan library diluar built-in bawaan Python 3. 
 
+Program dijalankan di lingkungan sistem operasi berbasis Linux maupun Windows. Server dan client dibuat secara terpisah dan dijalankan secara terpisah (dijalankan sebagai proses yang berbeda, namun dijalankan di mesin yang sama). Server dan client akan saling mengirim dan menerima berkas file yang merupakan data binary.
 
 ## Technologies Used
 - python
+- threading
+- argparse
+- binascii
+- socket
+- struct
 
 ## Features
-- sending file
-
+- sending file from server to client and to multiple clients
+- three way handshake
+- sliding window
+- error detection with checksum 
 
 ## How to Run
 1. open 1 terminal for server on root directory
 2. run this command
     ```bash
-    python -m src.classes.Server [server port] data/[file name with extension that want to be sent] 
+    python -m src.classes.Server [broadcast port] data/[file name with extension that want to be sent] 
     ```
     for example
     ```bash
@@ -32,7 +41,7 @@
 3. open one or more terminal for client on root directory
 4. run this command
     ```bash
-    python -m src.classes.Client [client port] [server port] data/output/[file name with extension for output file]
+    python -m src.classes.Client [client port] [broadcast port] data/output/[file name with extension for output file]
     ```
     for example
     ```bash
@@ -40,6 +49,11 @@
     ```
 5. Follow the instructions on the server
 6. For each following question on server terminal type "y" or "n" and enter
+
+The questions are:
+1. q1: Apakah ingin mengirim ke semua client sekaligus secara parallel? (y/n)
+2. q2: Mulai mengirim untuk client ke-x, port p ? (y/n)
+3. q3: Lanjutkan pengiriman untuk client berikutnya? (y/n)
 
 ## Project Status
 Project is: _complete_
