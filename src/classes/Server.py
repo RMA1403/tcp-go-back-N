@@ -111,22 +111,27 @@ class Server(Node, Parseable):
             thread.join()
     
 if __name__ == "__main__":
-    # Server Code
     server = Server()
     finished = False
     i = 0
     max_i = len(server.remote_hosts)
-    start = input("Mulai mengirim untuk client pertama, port: " + str(server.remote_hosts[0][1]) + " (y/n): ")
-    if start == "y":
-        while (not finished) :
+    prompt = input("Apakah ingin mengirim ke semua client sekaligus secara parallel? (y/n): ")
+    if prompt == "y":
+        for i in range(max_i):
             server.sendFile(i)
-            i+=1
-            if i == max_i:
-                break 
-            cont = input("Lanjutkan pengiriman file untuk client ke-" + str(i+1) + ", port: " + str(server.remote_hosts[i][1]) + " (y/n): ")
-            finished = cont != "y"
+    else:
+        while not finished:
+            start = input(f"Mulai mengirim untuk client ke-{i + 1}, port: {server.remote_hosts[i][1]} (y/n): ")
+            if start.lower() == "y":
+                server.sendFile(i)
+                i += 1
+                if i == max_i:
+                    break
+                cont = input(f"Lanjutkan pengiriman file untuk client ke-{i + 1}, port: {server.remote_hosts[i][1]} (y/n): ")
+                finished = cont.lower() != "y"
             
     # server.receive()
     server.down()
-
-# python -m src.classes.Server 5001 src/classes/data_long.txt
+    
+# python -m src.classes.Server 5001 data/data_long.txt 
+# python -m src.classes.Client 5000 5001 data/output/hello.txt
