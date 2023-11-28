@@ -73,6 +73,8 @@ class Client(Node, Parseable):
         
         with open(self.pathfile_output, 'wb') as file_receiver:
             file_receiver.write(byte)
+            
+        self.connection.initiate_close_connection(self.ip, self.broadcast_port)
 
 if __name__ == "__main__":
     # Client Code

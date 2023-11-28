@@ -108,9 +108,9 @@ class Connection:
 
                 self.close()
 
-    def respond_close_connection(self, remote_ip: str, remote_port: str):
+    def respond_close_connection(self):
         # listen for disconnect
-        fin_segment = self.listen(5)
+        fin_segment, (remote_ip, remote_port) = self.listen(None)
 
         if fin_segment is not None and fin_segment.flags.ack != True:
             # fin received, send acknowledgement

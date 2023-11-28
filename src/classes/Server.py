@@ -109,6 +109,8 @@ class Server(Node, Parseable):
 
         for thread in self.threads:
             thread.join()
+            
+        
     
 if __name__ == "__main__":
     # Server Code
@@ -127,6 +129,7 @@ if __name__ == "__main__":
             finished = cont != "y"
             
     # server.receive()
+    server.connection.respond_close_connection()
     server.down()
 
 # python -m src.classes.Server 5001 src/classes/data_long.txt
