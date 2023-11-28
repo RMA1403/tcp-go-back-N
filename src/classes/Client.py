@@ -6,6 +6,7 @@ from ..segment.segment import Segment
 from ..segment.flag import SegmentFlag
 from ..interfaces.Parseable import Parseable
 from .DynamicArray import DynamicArray
+from ..error_detection.hamming import correct_error 
 
 class Client(Node, Parseable):
 
@@ -56,20 +57,24 @@ class Client(Node, Parseable):
         eof = False
         while (not eof):
             data_segment = self.receive()
-
             if data_segment is not None:
+                if not data_segment.is_valid_checksum():
+                    data_segment.payload = correct_error(data_segment)
+                    if not data_segment.is_valid_checksum():
+                        continue
                 
                 eof = data_segment.flags.fin
                 
                 dynamic_array.insert(data_segment.seq_num, data_segment.payload)
                 data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, 0, b"")
-                # print(dynamic_array)
+
                 if eof and dynamic_array.check_full():
                     break
                 elif eof:
                     eof = False
                 else:
                     self.send(data_segment)
+                    
         data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, 0, b"")
         self.send(data_segment)
 

@@ -110,6 +110,9 @@ class Server(Node, Parseable):
                         0,
                         self.payloads[self.seq_num],
                     )
+                data_segment.update_parity()
+                data_segment.update_checksum()
+                
                 self.send(data_segment, client_port)
                 # if self.seq_num < len(self.payloads) - 1:
                 self.seq_num += 1

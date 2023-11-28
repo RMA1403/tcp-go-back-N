@@ -98,7 +98,7 @@ class Connection:
         # wait for fin acknowledgement
         fin_ack_data, _ = self.listen(5)
         fin_ack_segment = Segment.from_bytes(fin_ack_data)
-        print(fin_ack_segment.ack_num, fin_segment.seq_num + 1)
+
         if fin_ack_segment is not None and fin_ack_segment.flags.ack == True:
             # ack received, wait for fin
             finwait_data, _ = self.listen(5)
@@ -120,7 +120,7 @@ class Connection:
         if fin_segment is not None and fin_segment.flags.ack != True:
             # fin received, send acknowledgement
             fin_ack_segment = Segment(SegmentFlag(syn=True, ack=True, fin=True), 0, 1, 0, 0, b"")
-            print(fin_segment.seq_num)
+
             self.send(remote_ip, remote_port, fin_ack_segment)
             fin_ack_segment.log("Sent FIN-ACK")
     
