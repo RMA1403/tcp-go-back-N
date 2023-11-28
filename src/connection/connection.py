@@ -53,6 +53,7 @@ class Connection:
         ack_segment.log("Received ACK")
         
         self.log("Three-way handshake finished")
+        self.node.remote_hosts.append(client_addr)
         
     def connect(self, remote_ip: str, remote_port: str):    
         self.log("Initiating three-way handshake...")

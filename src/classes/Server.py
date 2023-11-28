@@ -11,13 +11,13 @@ import threading
 class Server(Node, Parseable):
 
     def __init__(self):
-        _, self.broadcast_port, self.pathfile_input = self.parse_args()
+        _, self.broadcast_port, self.pathfile_input, self.is_broadcast = self.parse_args()
 
         self.ip = "127.0.0.1"
         super().__init__(self.ip, self.broadcast_port)
-        self.client_port = 5000
-        self.connection.node = self
+        # self.connection.node = self
         self.connection.set_passive_listen(True)
+        self.client_port = self.remote_hosts[0][1]
         self.chunkSize = 2**15 - 14
         self.windowSize = 3
 
@@ -25,12 +25,14 @@ class Server(Node, Parseable):
         parser = argparse.ArgumentParser(description='Server')
         parser.add_argument('broadcast_port', metavar='[broadcast port]', type=int, help='broadcast port used for all client')
         parser.add_argument('pathfile_input', metavar='[Path file input]', type=str, help='path to file you want to send')
+        parser.add_argument('is_broadcast', metavar='[is broadcast]', type=bool, help='broadcast or not')
         
         args = parser.parse_args()
         broadcast_port = getattr(args, 'broadcast_port')
         pathfile_input = getattr(args, 'pathfile_input')
+        is_broadcast = getattr(args, 'is_broadcast')
         
-        return -1, broadcast_port, pathfile_input
+        return -1, broadcast_port, pathfile_input, is_broadcast
 
     def handleMessage(segment: Segment) -> None:
         print("Handling message:", segment.payload)

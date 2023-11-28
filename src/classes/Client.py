@@ -11,7 +11,6 @@ class Client(Node, Parseable):
 
     def __init__(self):
         self.client_port, self.broadcast_port, self.pathfile_output = self.parse_args()
-
         self.ip = "127.0.0.1"
         super().__init__(self.ip, self.client_port)
         self.client_seq_num = 1  # Set an initial sequence number
@@ -85,5 +84,5 @@ if __name__ == "__main__":
     # client.receive()
     client.down()
 
-# python -m src.classes.Client 5000 5001 src/classes/data.txt
-# python -m src.classes.Server 5001 src/classes/data.txt
+# python -m src.classes.Server 5001 data/data_long.txt true
+# python -m src.classes.Client 5000 5001 data/output/hello.txt

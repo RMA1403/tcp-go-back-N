@@ -8,6 +8,8 @@ class Node(ABC):
     def __init__(self, ip: str, port: int) -> None:
         self.connection = Connection(ip, port, self)
         self.seq_num = 1
+        
+        self.remote_hosts = []
 
     def log(self, message: str):
         print(f"[{self.__class__.__name__}] {message}")
