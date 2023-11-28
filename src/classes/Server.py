@@ -106,7 +106,9 @@ class Server(Node, Parseable):
                         self.payloads[self.seq_num],
                     )
                 self.send(data_segment, client_port)
+                # if self.seq_num < len(self.payloads) - 1:
                 self.seq_num += 1
+            print("SEND", self.seq_bottom, self.seq_num, self.seq_max)
 
     def ackReceiver(self):
         fin = False
@@ -122,6 +124,8 @@ class Server(Node, Parseable):
                 fin = received_segmet.flags.fin
             else:
                 self.seq_num = self.seq_bottom
+            print("ACK", self.seq_bottom, self.seq_num, self.seq_max)
+        
 
     def sendFile(self, i):
         self.threads = []

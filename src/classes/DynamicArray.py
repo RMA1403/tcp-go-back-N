@@ -33,6 +33,14 @@ class DynamicArray:
 
     def has_value(self):
         return any(item is not None for item in self.array)
+    
+    def check_full(self):
+        # print(self)
+        for val in self.array:
+            if val is None:
+                return False
+
+        return True
 
     def __str__(self) -> str:
         return str(self.array)

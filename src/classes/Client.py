@@ -64,11 +64,15 @@ class Client(Node, Parseable):
                 dynamic_array.insert(data_segment.seq_num, data_segment.payload)
                 data_segment = Segment(data_segment.flags, data_segment.seq_num, data_segment.seq_num + 1, 0, 0, b"")
                 self.send(data_segment)
-                if eof:
+                # print(dynamic_array)
+                if eof and dynamic_array.check_full():
                     break
+                elif eof:
+                    eof = False
 
         byte = b""
         for i in range(dynamic_array.get_size()):
+            print(i)
             byte += dynamic_array.get_value(i)
         
         with open(self.pathfile_output, 'wb') as file_receiver:
