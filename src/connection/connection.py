@@ -88,3 +88,41 @@ class Connection:
 
     def close(self):
         self.sock.close()
+
+    def initiate_close_connection(self, remote_ip: str, remote_port: str):
+        # send fin segement
+        fin_segment = Segment(SegmentFlag(syn=True, ack=False, fin=True), 0, 0, 0, 0, b"")
+        self.send(remote_ip, remote_port, fin_segment)
+
+        # wait for fin acknowledgement
+        fin_ack_segment = self.listen(5)
+
+        if fin_ack_segment is not None and fin_ack_segment.ack_num == fin_segment.seq_num + 1 and fin_ack_segment.flags.ack == True:
+            # ack received, wait for fin
+            finwait_segment = self.listen(5)
+
+            if finwait_segment is not None and finwait_segment.ack_num == fin_ack_segment.ack_num + 1:
+                # fin received, send fin back
+                finwait_ack_segment = Segment(SegmentFlag(syn=True, ack=True, fin=True), finwait_segment.ack_num, finwait_segment.ack_num + 1, 0, 0, b"")
+                self.send(remote_ip, remote_port, finwait_ack_segment)
+
+                self.close()
+
+    def respond_close_connection(self, remote_ip: str, remote_port: str):
+        # listen for disconnect
+        fin_segment = self.listen(5)
+
+        if fin_segment is not None and fin_segment.flags.ack != True:
+            # fin received, send acknowledgement
+            fin_ack_segment = Segment(SegmentFlag(syn=True, ack=True, fin=True), fin_segment.seq_num, fin_segment.seq_num + 1, 0, 0, b"")
+            self.send(remote_ip, remote_port, fin_ack_segment)
+
+            # send fin to close
+            finwait_segment = Segment(SegmentFlag(syn=True, ack=False, fin=True), fin_ack_segment.ack_num, fin_ack_segment.ack_num + 1, 0, 0, b"")
+            self.send(remote_ip, remote_port, finwait_segment)
+
+            # wait for finwait acknowledgement
+            finwait_ack_segment = self.listen(5)
+
+            if finwait_ack_segment is not None and finwait_ack_segment.ack_num == finwait_segment.ack_num + 1 and finwait_ack_segment.flags.ack == True:
+                self.close()
