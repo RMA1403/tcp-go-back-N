@@ -116,15 +116,14 @@ if __name__ == "__main__":
     finished = False
     i = 0
     max_i = len(server.remote_hosts)
-    start = input("Mulai mengirim? (y/n): ")
+    start = input("Mulai mengirim untuk client pertama, port: " + str(server.remote_hosts[0][1]) + " (y/n): ")
     if start == "y":
-        print("jumlah hosts: " + str(max_i))
         while (not finished) :
             server.sendFile(i)
             i+=1
             if i == max_i:
                 break 
-            cont = input("Apakah anda ingin melanjutkan pengiriman file ? (y/n): ")
+            cont = input("Lanjutkan pengiriman file untuk client ke-" + str(i+1) + ", port: " + str(server.remote_hosts[i][1]) + " (y/n): ")
             finished = cont != "y"
             
     # server.receive()
