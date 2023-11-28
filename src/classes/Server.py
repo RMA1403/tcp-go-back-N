@@ -110,7 +110,7 @@ class Server(Node, Parseable):
                         0,
                         self.payloads[self.seq_num],
                     )
-                data_segment.update_parity()
+                # data_segment.update_parity()
                 data_segment.update_checksum()
                 
                 self.send(data_segment, client_port)
@@ -177,7 +177,9 @@ if __name__ == "__main__":
             if not thread.is_alive():
                 thread.start()
         for thread in threads:
-            thread.join()
+            if thread.is_alive():
+                thread.join()
+        print("KELUAR")
     else:
         while not finished:
             start = input(

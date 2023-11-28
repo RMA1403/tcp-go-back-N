@@ -80,7 +80,6 @@ class Client(Node, Parseable):
 
         byte = b""
         for i in range(dynamic_array.get_size()):
-            print(i)
             byte += dynamic_array.get_value(i)
         
         with open(self.pathfile_output, 'wb') as file_receiver:

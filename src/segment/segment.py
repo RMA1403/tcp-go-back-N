@@ -38,8 +38,6 @@ class Segment:
         self.parity = create_parity(self.payload)
 
     def is_valid_checksum(self):
-        print(bin(self.checksum))
-        print(bin(create_checksum(self)))
         return self.checksum == create_checksum(self)
 
     @staticmethod
