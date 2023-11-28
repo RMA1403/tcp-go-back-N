@@ -19,7 +19,7 @@ with open("src/classes/data_long.txt", "r") as readfile:
 
     byte_segment = segment.to_bytes()
     print(len(byte_segment))
-    broken = byte_segment[:1248] + b"3"
+    broken = byte_segment[:1247] + b"1"
     print(len(broken))
 
     new_segment: Segment = Segment.from_bytes(broken)
